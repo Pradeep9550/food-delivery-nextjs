@@ -1,0 +1,188 @@
+// app/create-edit-shop/page.jsx
+'use client';
+
+import { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useRouter } from 'next/navigation';
+import { IoIosArrowRoundBack } from "react-icons/io";
+import { FaUtensils } from "react-icons/fa";
+import axios from 'axios';
+import { setMyShopData } from '@/redux/ownerSlice';
+import { serverUrl } from '@/lib/constants';
+import { ClipLoader } from 'react-spinners';
+import Image from 'next/image';
+
+export default function CreateEditShop() {
+    const router = useRouter();
+    const { myShopData } = useSelector(state => state.owner);
+    const { currentCity, currentState, currentAddress } = useSelector(state => state.user);
+    
+    const [name, setName] = useState(myShopData?.name || "");
+    const [address, setAddress] = useState(myShopData?.address || currentAddress || "");
+    const [city, setCity] = useState(myShopData?.city || currentCity || "");
+    const [state, setState] = useState(myShopData?.state || currentState || "");
+    const [frontendImage, setFrontendImage] = useState(myShopData?.image || null);
+    const [backendImage, setBackendImage] = useState(null);
+    const [loading, setLoading] = useState(false);
+    
+    const dispatch = useDispatch();
+
+    const handleImage = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setBackendImage(file);
+            setFrontendImage(URL.createObjectURL(file));
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        
+        if (!name || !address || !city || !state) {
+            alert("Please fill all required fields");
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const formData = new FormData();
+            formData.append("name", name);
+            formData.append("city", city);
+            formData.append("state", state);
+            formData.append("address", address);
+            
+            if (backendImage) {
+                formData.append("image", backendImage);
+            }
+            
+            const result = await axios.post(
+                `${serverUrl}/api/shop/create-edit`,
+                formData,
+                { 
+                    withCredentials: true,
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                }
+            );
+            console.log(result.data, " shop/create-edit")
+            dispatch(setMyShopData(result.data));
+            router.push("/");
+        } catch (error) {
+            console.error("Error saving shop:", error);
+            alert("Failed to save shop. Please try again.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className='flex justify-center flex-col items-center p-6 bg-gradient-to-br from-orange-50 relative to-white min-h-screen pt-20'>
+            <div className='absolute top-20 left-4 z-10'>
+                <button onClick={() => router.push("/")}>
+                    <IoIosArrowRoundBack size={35} className='text-[#ff4d2d]' />
+                </button>
+            </div>
+
+            <div className='max-w-lg w-full bg-white shadow-xl rounded-2xl p-8 border border-orange-100'>
+                <div className='flex flex-col items-center mb-6'>
+                    <div className='bg-orange-100 p-4 rounded-full mb-4'>
+                        <FaUtensils className='text-[#ff4d2d] w-16 h-16' />
+                    </div>
+                    <div className="text-3xl font-extrabold text-gray-900">
+                        {myShopData ? "Edit Shop" : "Add Shop"}
+                    </div>
+                </div>
+                
+                <form className='space-y-5' onSubmit={handleSubmit}>
+                    <div>
+                        <label className='block text-sm font-medium text-gray-700 mb-1'>
+                            Shop Name <span className="text-red-500">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            placeholder='Enter Shop Name' 
+                            className='w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500'
+                            onChange={(e) => setName(e.target.value)}
+                            value={name}
+                            required
+                        />
+                    </div>
+                    
+                    <div>
+                        <label className='block text-sm font-medium text-gray-700 mb-1'>Shop Image</label>
+                        <input 
+                            type="file" 
+                            accept='image/*' 
+                            className='w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500' 
+                            onChange={handleImage}
+                        />
+                        {frontendImage && (
+                            <div className='mt-4'>
+                                <div className='relative w-full h-48'>
+                                    <Image 
+                                        src={frontendImage} 
+                                        alt="Shop preview"
+                                        fill
+                                        className='object-cover rounded-lg border'
+                                    />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    
+                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                        <div>
+                            <label className='block text-sm font-medium text-gray-700 mb-1'>
+                                City <span className="text-red-500">*</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                placeholder='City' 
+                                className='w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500' 
+                                onChange={(e) => setCity(e.target.value)}
+                                value={city}
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label className='block text-sm font-medium text-gray-700 mb-1'>
+                                State <span className="text-red-500">*</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                placeholder='State' 
+                                className='w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500' 
+                                onChange={(e) => setState(e.target.value)}
+                                value={state}
+                                required
+                            />
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label className='block text-sm font-medium text-gray-700 mb-1'>
+                            Address <span className="text-red-500">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            placeholder='Enter Shop Address' 
+                            className='w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500' 
+                            onChange={(e) => setAddress(e.target.value)}
+                            value={address}
+                            required
+                        />
+                    </div>
+                    
+                    <button 
+                        className='w-full bg-[#ff4d2d] text-white px-6 py-3 rounded-lg font-semibold shadow-md hover:bg-orange-600 hover:shadow-lg transition-all duration-200 cursor-pointer flex items-center justify-center'
+                        type="submit"
+                        disabled={loading}
+                    >
+                        {loading ? <ClipLoader size={20} color='white' /> : "Save"}
+                    </button>
+                </form>
+            </div>
+        </div>
+    );
+}
