@@ -3,7 +3,7 @@
 
 import { io } from "socket.io-client";
 
-export const socket = io("http://localhost:8002", {
+export const socket = io("https://food-delivery-jubo.onrender.com", {
   autoConnect: false,
   withCredentials: true,
   transports: ['websocket', 'polling'],
