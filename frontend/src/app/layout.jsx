@@ -50,7 +50,7 @@ function AppContent({ children }) {
 
   // socket.io
   useEffect(() => {
-    if (!userData?._id) return;
+    if (!userData?._id || !socket) return;
 
     socket.connect();
 

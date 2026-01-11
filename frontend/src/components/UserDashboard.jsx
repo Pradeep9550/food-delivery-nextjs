@@ -4,7 +4,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
-import Nav from './Nav';
+import dynamic from "next/dynamic";
+const Nav = dynamic(() => import("./Nav"), { ssr: false });
+
 import { categories } from '@/lib/categories';
 import CategoryCard from './CategoryCard';
 import { FaCircleChevronLeft, FaCircleChevronRight } from "react-icons/fa6";

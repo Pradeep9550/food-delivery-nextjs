@@ -5,38 +5,38 @@ import { useSelector } from 'react-redux';
 import { serverUrl } from '@/lib/constants';
 
 function useUpdateLocation() {
-    const { userData } = useSelector(state => state.user);
+  const { userData } = useSelector(state => state.user);
 
-    useEffect(() => {
-        const updateLocation = async (lat, lon) => {
-            if (!userData) return;
-            
-            try {
-                await axios.post(`${serverUrl}/api/user/update-location`, 
-                    { lat, lon }, 
-                    { withCredentials: true }
-                );
-                console.log("user/update-location");
-            } catch (error) {
-                console.error("Error updating location:", error);
-            }
-        };
+  useEffect(() => {
+    // ✅ SSR GUARD (MANDATORY)
+    if (typeof window === 'undefined' || !navigator.geolocation) return;
+    if (!userData) return;
 
-        if (userData) {
-            const watchId = navigator.geolocation.watchPosition(
-                (pos) => {
-                    updateLocation(pos.coords.latitude, pos.coords.longitude);
-                },
-                (error) => {
-                    console.error("Geolocation error:", error);
-                }
-            );
+    const updateLocation = async (lat, lon) => {
+      try {
+        await axios.post(
+          `${serverUrl}/api/user/update-location`,
+          { lat, lon },
+          { withCredentials: true }
+        );
+      } catch (error) {
+        console.error("Error updating location:", error);
+      }
+    };
 
-            return () => {
-                navigator.geolocation.clearWatch(watchId);
-            };
-        }
-    }, [userData]);
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        updateLocation(pos.coords.latitude, pos.coords.longitude);
+      },
+      (error) => {
+        console.error("Geolocation error:", error);
+      }
+    );
+
+    return () => {
+      navigator.geolocation.clearWatch(watchId);
+    };
+  }, [userData]);
 }
 
 export default useUpdateLocation;

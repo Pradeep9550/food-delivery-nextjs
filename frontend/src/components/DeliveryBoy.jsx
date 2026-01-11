@@ -4,11 +4,26 @@
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
-import Nav from './Nav';
+import dynamic from "next/dynamic";
+
+const Nav = dynamic(() => import("./Nav"), { ssr: false });
+const DeliveryBoyTracking = dynamic(
+  () => import("./DeliveryBoyTracking"),
+  { ssr: false }
+);
+
 import axios from 'axios';
-import DeliveryBoyTracking from './DeliveryBoyTracking';
+
 import { ClipLoader } from 'react-spinners';
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+
+
+const BarChart = dynamic(() => import("recharts").then(m => m.BarChart), { ssr: false });
+const Bar = dynamic(() => import("recharts").then(m => m.Bar), { ssr: false });
+const CartesianGrid = dynamic(() => import("recharts").then(m => m.CartesianGrid), { ssr: false });
+const ResponsiveContainer = dynamic(() => import("recharts").then(m => m.ResponsiveContainer), { ssr: false });
+const Tooltip = dynamic(() => import("recharts").then(m => m.Tooltip), { ssr: false });
+const XAxis = dynamic(() => import("recharts").then(m => m.XAxis), { ssr: false });
+const YAxis = dynamic(() => import("recharts").then(m => m.YAxis), { ssr: false });
 import { serverUrl } from '@/lib/constants';
 
 function DeliveryBoy() {
@@ -23,38 +38,38 @@ function DeliveryBoy() {
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState("");
 
-    useEffect(() => {
-        if (!socket || userData?.role !== "deliveryBoy") return;
+   useEffect(() => {
+    // ✅ SSR + browser guard (MOST IMPORTANT)
+    if (
+        typeof window === "undefined" ||
+        !navigator.geolocation ||
+        !socket ||
+        userData?.role !== "deliveryBoy"
+    ) return;
 
-        let watchId;
-        if (navigator.geolocation) {
-            watchId = navigator.geolocation.watchPosition(
-                (position) => {
-                    const latitude = position.coords.latitude;
-                    const longitude = position.coords.longitude;
-                    setDeliveryBoyLocation({ lat: latitude, lon: longitude });
-                    
-                    if (socket) {
-                        socket.emit('updateLocation', {
-                            latitude,
-                            longitude,
-                            userId: userData._id
-                        });
-                    }
-                },
-                (error) => {
-                    console.error("Geolocation error:", error);
-                },
-                {
-                    enableHighAccuracy: true
-                }
-            );
-        }
+    let watchId = navigator.geolocation.watchPosition(
+        (position) => {
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+            setDeliveryBoyLocation({ lat: latitude, lon: longitude });
 
-        return () => {
-            if (watchId) navigator.geolocation.clearWatch(watchId);
-        };
-    }, [socket, userData]);
+            socket.emit('updateLocation', {
+                latitude,
+                longitude,
+                userId: userData._id
+            });
+        },
+        (error) => {
+            console.error("Geolocation error:", error);
+        },
+        { enableHighAccuracy: true }
+    );
+
+    return () => {
+        navigator.geolocation.clearWatch(watchId);
+    };
+}, [socket, userData]);
+
 
     const ratePerDelivery = 50;
     const totalEarning = todayDeliveries.reduce((sum, d) => sum + d.count * ratePerDelivery, 0);

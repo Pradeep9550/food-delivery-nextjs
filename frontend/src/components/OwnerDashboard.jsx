@@ -3,7 +3,9 @@
 
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
-import Nav from './Nav';
+import dynamic from "next/dynamic";
+const Nav = dynamic(() => import("./Nav"), { ssr: false });
+
 import { FaUtensils, FaPen } from "react-icons/fa";
 import OwnerItemCard from './OwnerItemCard';
 
