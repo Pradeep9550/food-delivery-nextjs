@@ -3,6 +3,7 @@
 
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import dynamic from "next/dynamic";
 const Nav = dynamic(() => import("./Nav"), { ssr: false });
 
