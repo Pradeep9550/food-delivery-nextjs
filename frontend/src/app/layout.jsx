@@ -7,6 +7,8 @@ import { socket } from "@/lib/socket";
 import { setSocketConnected, setSocketId } from "@/redux/userSlice";
 import { useEffect } from "react";
 import Script from "next/script";
+import 'leaflet/dist/leaflet.css';
+
 
 import useGetCurrentUser from "@/hooks/useGetCurrentUser";
 import useUpdateLocation from "@/hooks/useUpdateLocation";

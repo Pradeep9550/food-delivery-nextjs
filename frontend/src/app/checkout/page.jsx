@@ -29,10 +29,7 @@ const Marker = dynamic(
     () => import('react-leaflet').then((mod) => mod.Marker),
     { ssr: false }
 );
-const useMap = dynamic(
-    () => import('react-leaflet').then((mod) => mod.useMap),
-    { ssr: false }
-);
+import { useMap } from 'react-leaflet';
 
 function RecenterMap({ location }) {
     const map = useMap();
