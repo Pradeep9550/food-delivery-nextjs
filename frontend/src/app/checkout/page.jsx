@@ -153,6 +153,7 @@ export default function CheckOut() {
     };
 
     const openRazorpayWindow = (orderId, razorOrder) => {
+        if (typeof window === 'undefined') return
         const options = {
             key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
             amount: razorOrder.amount,
