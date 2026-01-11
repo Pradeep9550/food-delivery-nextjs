@@ -38,37 +38,41 @@ function DeliveryBoy() {
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState("");
 
-   useEffect(() => {
-    // ✅ SSR + browser guard (MOST IMPORTANT)
-    if (
-        typeof window === "undefined" ||
-        !navigator.geolocation ||
-        !socket ||
-        userData?.role !== "deliveryBoy"
-    ) return;
+    console.log(deliveryBoyLocation ,"deliveryBoyLocation")
 
-    let watchId = navigator.geolocation.watchPosition(
-        (position) => {
-            const latitude = position.coords.latitude;
-            const longitude = position.coords.longitude;
-            setDeliveryBoyLocation({ lat: latitude, lon: longitude });
+  useEffect(() => {
+  if (typeof window === "undefined") return;
+  if (!navigator.geolocation) return;
+  if (!userData || userData.role !== "deliveryBoy") return;
 
-            socket.emit('updateLocation', {
-                latitude,
-                longitude,
-                userId: userData._id
-            });
-        },
-        (error) => {
-            console.error("Geolocation error:", error);
-        },
-        { enableHighAccuracy: true }
-    );
+  console.log(" Starting location tracking");
 
-    return () => {
-        navigator.geolocation.clearWatch(watchId);
-    };
-}, [socket, userData]);
+  const watchId = navigator.geolocation.watchPosition(
+    (position) => {
+      const latitude = position.coords.latitude;
+      const longitude = position.coords.longitude;
+
+      console.log(" Location:", latitude, longitude);
+
+      setDeliveryBoyLocation({ lat: latitude, lon: longitude });
+
+      if (socket) {
+        socket.emit("updateLocation", {
+          latitude,
+          longitude,
+          userId: userData._id
+        });
+      }
+    },
+    (error) => {
+      console.error(" Geolocation error:", error);
+    },
+    { enableHighAccuracy: true }
+  );
+
+  return () => navigator.geolocation.clearWatch(watchId);
+}, [userData, socket]);
+
 
 
     const ratePerDelivery = 50;
